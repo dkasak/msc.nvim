@@ -4,7 +4,7 @@ function msc.resolve_msc()
   local line, col = unpack(vim.api.nvim_win_get_cursor(0))
   local current_line = vim.api.nvim_buf_get_lines(0, line-1, line, false)[1]
 
-  local pattern = "MSC(%d%d%d%d%d?)"
+  local pattern = "[Mm][Ss][Cc][%s_]?(%d%d%d%d%d?)"
   local msc_number = current_line:match(pattern)
 
   if msc_number then
