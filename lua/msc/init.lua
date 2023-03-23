@@ -2,7 +2,7 @@ local msc = {}
 
 local msc_pattern = "[Mm][Ss][Cc][%s_]?(%d%d%d%d%d?)"
 
-function msc.resolve_msc()
+function msc.open_msc()
     local line, col = unpack(vim.api.nvim_win_get_cursor(0))
     local current_line = vim.api.nvim_buf_get_lines(0, line - 1, line, false)[1]
 
@@ -20,7 +20,7 @@ end
 
 function msc.setup()
     vim.cmd([[
-    command! ResolveMSC lua require('msc').resolve_msc()
+    command! OpenMSC lua require('msc').open_msc()
     ]])
 
     local hover_present, hover = pcall(require, "hover.async")
