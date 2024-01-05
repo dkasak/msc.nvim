@@ -3,7 +3,7 @@ local msc = {}
 local msc_pattern = "[Mm][Ss][Cc][%s_]?(%d%d%d%d%d?)"
 
 function msc.open_msc()
-    local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+    local line, _ = unpack(vim.api.nvim_win_get_cursor(0))
     local current_line = vim.api.nvim_buf_get_lines(0, line - 1, line, false)[1]
 
     local msc_number = current_line:match(msc_pattern)
@@ -23,7 +23,7 @@ function msc.setup()
     command! OpenMSC lua require('msc').open_msc()
     ]])
 
-    local hover_present, hover = pcall(require, "hover.async")
+    local hover_present, _ = pcall(require, "hover.async")
 
     if hover_present then
         local api, fn = vim.api, vim.fn
@@ -36,7 +36,8 @@ function msc.setup()
 
         local function process(result)
             local ok, json = pcall(vim.json.decode, result)
-            if not ok then
+
+            if not ok or not json then
                 async.scheduler()
                 vim.notify("Failed to parse gh result", vim.log.levels.ERROR)
                 return
@@ -60,20 +61,17 @@ function msc.setup()
             return lines
         end
 
-        local execute = async.void(function(done)
+        local execute = async.void(function(_, done)
             local bufnr = api.nvim_get_current_buf()
             local cwd = fn.fnamemodify(api.nvim_buf_get_name(bufnr), ":p:h")
-            local id = fn.expand("<cword>")
+            local job = require("hover.async.job").job
 
-            local word = fn.expand("<cWORD>")
-
-            local output
+            local msc_id = fn.expand("<cWORD>")
+            local num = msc_id:match(msc_pattern)
 
             local fields = "author,title,number,body,state,createdAt,updatedAt,url"
 
-            local job = require("hover.async.job").job
-
-            num = word:match(msc_pattern)
+            local output
             if num then
                 ---@type string[]
                 output = job({
