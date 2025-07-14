@@ -61,38 +61,36 @@ function msc.setup()
             return lines
         end
 
-        local execute = async.void(function(_, done)
+        local execute = function(_, done)
             local bufnr = api.nvim_get_current_buf()
             local cwd = fn.fnamemodify(api.nvim_buf_get_name(bufnr), ":p:h")
-            local job = require("hover.async.job").job
 
             local msc_id = fn.expand("<cWORD>")
             local num = msc_id:match(msc_pattern)
 
             local fields = "author,title,number,body,state,createdAt,updatedAt,url"
 
-            local output
             if num then
-                ---@type string[]
-                output = job({
-                    "gh",
-                    "-R",
-                    "matrix-org/matrix-spec-proposals",
-                    "issue",
-                    "view",
-                    "--json",
-                    fields,
-                    num,
-                    cwd = cwd,
-                })
+                vim.system({
+                        "gh",
+                        "-R",
+                        "matrix-org/matrix-spec-proposals",
+                        "issue",
+                        "view",
+                        "--json",
+                        fields,
+                        num,
+                    }, { cwd = cwd },
+                    function(output)
+                        local results = process(output.stdout)
+                        done(results and { lines = results, filetype = "markdown" })
+                    end
+                )
             else
                 done(false)
                 return
             end
-
-            local results = process(output)
-            done(results and { lines = results, filetype = "markdown" })
-        end)
+        end
 
         require("hover").register({
             name = "MSC",
